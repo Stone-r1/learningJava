@@ -13,10 +13,16 @@ class Main {
         int operation = checkValidity(scan);
         scan.nextLine();
 
+        User currentUser = null;
+
         switch (operation) {
             case 1: manager.loginUser(scan); break;
             case 2: manager.registerUser(scan); break;
-            case 3: return;
+            case 3: System.exit(0);
+        }
+
+        if (currentUser != null) {
+            System.out.println("Welcome " + currentUser.getUsername() + "your current balance is " + currentUser.getBalance());
         }
     }
 
@@ -60,9 +66,8 @@ class Reader {
     }
 
     public void createNewAccount(String username, String password) {
-        try {
-            FileWriter writer = new FileWriter("accounts.txt", true);
-            writer.write(username + "," + password + "\n");
+        try (FileWriter writer = new FileWriter("accounts.txt", true)) {
+            writer.write(username + "," + password + ",0\n");
             writer.close();
         } catch (IOException e) {
             System.out.println("ERROR!");
@@ -75,16 +80,11 @@ class Reader {
             while (fileScan.hasNextLine()) {
                 String line = fileScan.nextLine();
                 String[] parts = line.split(",");
-                if (parts.length >= 2) {
+                if (parts.length >= 3) {
                     String fileUsername = parts[0];
                     String filePassword = parts[1];
-
-                    if (password.isEmpty()) {
-                        if (fileUsername.equals(username)) {
-                            return true;
-                        }
-                    }
-                    else if (fileUsername.equals(username) && filePassword.equals(password)) {
+                    
+                    if (fileUsername.equals(username) && filePassword.equals(password)) {
                         return true;
                     }
                 }
@@ -96,6 +96,54 @@ class Reader {
             System.out.println("Try again later.");
             return false;
         }
+    }
+
+    public boolean checkIfUsernameExists(String username) {
+        try (Scanner fileScan = new Scanner(new File("accounts.txt"))) {
+            while (fileScan.hasNextLine()) {
+                String line = fileScan.nextLine();
+                String[] parts = line.split(",");
+                if (parts.length >= 1) {
+                    String fileUsername = parts[0];
+                    
+                    if (fileUsername.equals(username)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        } catch (IOException e) {
+            System.out.println("ERROR!");
+            System.out.println("Try again later.");
+            return false;
+        }
+    }
+
+    public User getUser(String username, String password) {
+        try (Scanner fileScan = new Scanner(new File("accounts.txt"))) {
+            while (fileScan.hasNextLine()) {
+                String line = fileScan.nextLine();
+                String[] parts = line.split(",");
+                if (parts.length >= 3) {
+                    String fileUsername = parts[0];
+                    String filePassword = parts[1];
+                    int balance = Integer.parseInt(parts[2]);
+
+                    if (fileUsername.equals(username) && filePassword.equals(password)) {
+                        return new User(fileUsername, filePassword, balance);
+                    }
+                } 
+            }
+
+        } catch (IOException e) {
+            System.out.println("ERROR!");
+            System.out.println("Try again later.");
+        } catch (NumberFormatException e) {
+            System.out.println("Error parsing balance.");
+            System.out.println("Try again later.");
+        }
+        return null;
     }
 }
 
@@ -141,30 +189,32 @@ class AccountManager {
         this.reader = new Reader();
     }
 
-    public void loginUser(Scanner scan) {
-        String username, password;
-        boolean checker = false;
+    public User loginUser(Scanner scan) {
+        String username, password, input;
+        User loggedInUser = null;
         
-        scan.nextLine();
-        while (!checker) {
+        while (true) {
             System.out.println("Enter username");
             username = scan.nextLine();
             System.out.println("Enter password");
             password = scan.nextLine();
 
-            checker = reader.checkIfAccountExists(username, password);
-            if (checker) {
-                System.out.println("Login Successfully");
+            loggedInUser = reader.getUser(username, password);
+            if (loggedInUser != null) {
+                System.out.println("Login Successful!");
                 break;
             } 
 
             System.out.println("Invalid username or password");
             System.out.println("Do you want to try again? (y/n)");
-            String input = scan.nextLine().trim().toLowerCase();
 
-            if (input.equals("y")) continue;
-            else break;
+            input = scan.nextLine().trim().toLowerCase();
+            if (!input.equals("y")) {
+                break;
+            }
         }
+
+        return loggedInUser;
     }
 
     public void registerUser(Scanner scan) {
@@ -173,7 +223,7 @@ class AccountManager {
         System.out.println("Enter username");
         username = scan.nextLine();
 
-        if (reader.checkIfAccountExists(username, "")) {
+        if (reader.checkIfUsernameExists(username)) {
             System.out.println("This username is already taken.");
             return;
         }

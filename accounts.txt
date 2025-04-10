@@ -1,3 +1,4 @@
-stoney,stoney
-Stoney,Stoney
-abc,abc
+stoney,stoney,0
+Stoney,Stoney,0
+abc,abc,0
+test,test,0

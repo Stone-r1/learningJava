@@ -16,13 +16,14 @@ class Main {
         User currentUser = null;
 
         switch (operation) {
-            case 1: manager.loginUser(scan); break;
+            case 1: currentUser = manager.loginUser(scan); break;
             case 2: manager.registerUser(scan); break;
             case 3: System.exit(0);
         }
 
         if (currentUser != null) {
-            System.out.println("Welcome " + currentUser.getUsername() + "your current balance is " + currentUser.getBalance());
+            System.out.println("Welcome " + currentUser.getUsername() + " your current balance is " + currentUser.getBalance());
+            // further functionality here
         }
     }
 
@@ -165,7 +166,7 @@ class User {
         this.password = newPassword;
     }
 
-    public double getBalance() {
+    public int getBalance() {
         return balance;
     }
 

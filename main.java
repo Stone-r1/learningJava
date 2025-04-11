@@ -23,7 +23,7 @@ class Main {
 
         if (currentUser != null) {
             System.out.println("Welcome " + currentUser.getUsername() + " your current balance is " + currentUser.getBalance());
-            // further functionality here
+            sessionLoop(scan, currentUser);
         }
     }
 
@@ -50,6 +50,63 @@ class Main {
         }
 
         return operation;
+    }
+
+    public static void sessionLoop(Scanner scan, User currentUser) {
+        String command = "";
+        System.out.println("You're logged in. Type 'help' to get additional information or 'quit' to exit");
+        while (!command.equalsIgnoreCase("quit")) {
+            command = scan.nextLine().trim().toLowerCase();
+            switch (command) {
+                case "help":
+                    printHelp();
+                    break;
+
+                case "deposit":
+                    System.out.println("Enter deposit amount:");
+                    try {
+                        int amount = Integer.parseInt(scan.nextLine().trim());
+                        currentUser.addToBalance(amount);
+                        System.out.println("New balance: " + currentUser.getBalance());
+                    } catch (NumberFormatException e) {
+                        System.out.println("Please enter valid integer.");
+                    }
+                    break;
+
+                case "withdraw":
+                    System.out.println("Enter withdrawal amount:");
+                    try {
+                        int amount = Integer.parseInt(scan.nextLine().trim());
+                        if (currentUser.getMoney(amount)) {
+                            System.out.println("New balance: " + currentUser.getBalance());
+                        } else {
+                            System.out.println("Current user doesn't have " + amount + "$");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Please enter valid integer.");
+                    }
+                    break;
+
+                case "balance":
+                    System.out.println(currentUser.getUsername() + " has " + currentUser.getBalance() + "$");
+                    break;
+
+                case "quit":
+                    System.out.println("Logging out...");
+                    break;
+
+                default:
+                    System.out.println("Unknown command");
+            }
+        }
+    }
+
+    public static void printHelp() {
+        System.out.println("Available commands:");
+        System.out.println("  deposit  - Add money to your account.");
+        System.out.println("  withdraw - Remove money from your account.");
+        System.out.println("  balance  - Check your current balance.");
+        System.out.println("  quit     - Log out.");
     }
 }
 

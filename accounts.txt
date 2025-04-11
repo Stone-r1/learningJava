@@ -1,4 +1,4 @@
-stoney,stoney,0
+stoney,stoney,1000
 Stoney,Stoney,0
 abc,abc,0
 test,test,0

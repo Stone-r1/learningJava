@@ -23,7 +23,7 @@ class Main {
 
         if (currentUser != null) {
             System.out.println("Welcome " + currentUser.getUsername() + " your current balance is " + currentUser.getBalance());
-            sessionLoop(scan, currentUser);
+            sessionLoop(scan, currentUser, reader);
         }
     }
 
@@ -52,7 +52,7 @@ class Main {
         return operation;
     }
 
-    public static void sessionLoop(Scanner scan, User currentUser) {
+    public static void sessionLoop(Scanner scan, User currentUser, Reader reader) {
         String command = "";
         System.out.println("You're logged in. Type 'help' to get additional information or 'quit' to exit");
         while (!command.equalsIgnoreCase("quit")) {
@@ -63,28 +63,11 @@ class Main {
                     break;
 
                 case "deposit":
-                    System.out.println("Enter deposit amount:");
-                    try {
-                        int amount = Integer.parseInt(scan.nextLine().trim());
-                        currentUser.addToBalance(amount);
-                        System.out.println("New balance: " + currentUser.getBalance());
-                    } catch (NumberFormatException e) {
-                        System.out.println("Please enter valid integer.");
-                    }
+                    deposit(scan, currentUser, reader);
                     break;
 
                 case "withdraw":
-                    System.out.println("Enter withdrawal amount:");
-                    try {
-                        int amount = Integer.parseInt(scan.nextLine().trim());
-                        if (currentUser.getMoney(amount)) {
-                            System.out.println("New balance: " + currentUser.getBalance());
-                        } else {
-                            System.out.println("Current user doesn't have " + amount + "$");
-                        }
-                    } catch (NumberFormatException e) {
-                        System.out.println("Please enter valid integer.");
-                    }
+                    withdraw(scan, currentUser, reader);
                     break;
 
                 case "balance":
@@ -98,6 +81,33 @@ class Main {
                 default:
                     System.out.println("Unknown command");
             }
+        }
+    }
+
+    public static void deposit(Scanner scan, User currentUser, Reader reader) {
+        System.out.println("Enter deposit amount:");
+        try {
+            int amount = Integer.parseInt(scan.nextLine().trim());
+            currentUser.addToBalance(amount);
+            reader.updateUser(currentUser.getUsername(), currentUser);
+            System.out.println("New balance: " + currentUser.getBalance());
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter valid integer.");
+        }
+    }
+
+    public static void withdraw(Scanner scan, User currentUser, Reader reader) {
+        System.out.println("Enter withdrawal amount:");
+        try {
+            int amount = Integer.parseInt(scan.nextLine().trim());
+            if (currentUser.getMoney(amount)) {
+                System.out.println("New balance: " + currentUser.getBalance());
+                reader.updateUser(currentUser.getUsername(), currentUser);
+            } else {
+                System.out.println("Current user doesn't have " + amount + "$");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Please enter valid integer.");
         }
     }
 
@@ -203,6 +213,34 @@ class Reader {
         }
         return null;
     }
+    
+    public void updateUser(String username, User updatedUser) {
+        List<String> lines = new ArrayList<>();
+        try (Scanner fileScan = new Scanner(new File("accounts.txt"))) {
+            while (fileScan.hasNextLine()) {
+                String line = fileScan.nextLine();
+                String parts[] = line.split(",");
+                if (parts.length >= 3) {
+                    String fileUsername = parts[0];
+                    if (fileUsername.equals(username)) {
+                        line = updatedUser.getUsername() + "," + updatedUser.getPassword() + "," + updatedUser.getBalance();
+                    }
+                }
+
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Error!");
+        }
+
+        try (FileWriter writer = new FileWriter(new File("accounts.txt"))) {
+            for (String line : lines) {
+                writer.write(line + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error!");
+        }
+    } 
 }
 
 class User { 
@@ -217,6 +255,10 @@ class User {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public void changePassword(String newPassword) {
